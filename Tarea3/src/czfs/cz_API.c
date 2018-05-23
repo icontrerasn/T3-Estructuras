@@ -3,9 +3,22 @@
 czFILE* cz_open(char* filename, char mode){
   czFILE* file = malloc(sizeof(czFILE));
   file->data = fopen(filename, "rb");
+  if (mode == "r"){
+    if (file->data){
+      //QUE HACER
+    } else {
+      return NULL;
+    }
+  } else if (mode == "w") {
+    if (file->data){
+      return NULL;
+    } else {
+      //QUE HACER
+    }
+  } else {
+    printf("Modo no válido");
+  }
 
-  return file;
-}
 
 int cz_exists(char* filename){
   return 0;
