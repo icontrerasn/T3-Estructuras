@@ -1,15 +1,38 @@
-#include <stdio.h>
 #include "cz_API.h"
 
-//Ejemplo
-// file_desc = cz_open("test.txt", 'w');
-// // Suponga que abrio y leyo un archivo desde su computador,
-// // almacenando su contenido en un arreglo f, de 300 byte.
-// cz_write(file_desc, &f, 300);
-// cz_cp("test.txt", "copy.txt");
-// cz_close(file_desc);
 
-int main(int argc, char const *argv[]) {
-  printf("Hola!\n");
+void read_bin(char* data, int bloque, int bytes){
+  int size_bloque = 1024;
+  char* pathdata = "simdiskfilled.bin";
+  FILE* filebin;
+  filebin = fopen(pathdata, "rb");
+  fseek(filebin, bloque*size_bloque, SEEK_SET);
+  fread(data, bytes, 1, filebin);
+  fclose(filebin);
+}
+
+int main ()
+{
+  char filename[11] = "texto.txt";
+  //get_indice(filename);
+  // unsigned indice = found_file(filename);
+  // printf("%u\n", indice);
+  //char mode = 'r';
+  cz_open(filename, 'r');
+  //cz_ls();
+
+
   return 0;
 }
+
+// int main ()
+// {
+//   char data[1];
+//   read_bin(data, 0, 1);
+//
+//   printf("%d\n", *data);
+//   // unsigned number = get_decimal(2, data);
+//   // printf("%d\n", number);
+//
+//   return 0;
+// }

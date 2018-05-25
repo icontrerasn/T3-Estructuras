@@ -5,11 +5,16 @@
 
 
 struct cz_file{
-  FILE* data;
+  char open_mode;
+  char filename[11];
+  char size[4];
+  char time_creat[4];
+  char time_mod[4];
+  char punteros_bloq_datos[252][4];
 };
 typedef struct cz_file czFILE;
 
-
+unsigned found_file(char* filename);
 
 czFILE* cz_open(char* filename, char mode);
 
