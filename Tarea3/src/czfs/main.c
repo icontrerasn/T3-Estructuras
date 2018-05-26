@@ -15,10 +15,11 @@ int main ()
 {
   char filename[11] = "texto.txt";
   //get_indice(filename);
-  // unsigned indice = found_file(filename);
-  // printf("%u\n", indice);
+  //unsigned indice = found_file(filename);
+  //printf("%u\n", indice);
   //char mode = 'r';
-  cz_open(filename, 'r');
+  //czFILE* file = cz_open(filename, 'r');
+  //printf("%u\n", hexchar_to_dec(file->size));
   //cz_ls();
 
 
