@@ -67,8 +67,11 @@ czFILE* cz_open(char* filename, char mode){
       indice = get_indice(filename);
       char* pathdata = "simdiskfilled.bin";
       FILE* filebin = fopen(pathdata, "rb");
-      fseek(filebin, indice*64, SEEK_CUR);
+      printf("%d\n", indice);
+      fseek(filebin, 1024*indice, SEEK_SET);
+
       fread(file->size, 4, 1, filebin);
+      printf("Tamaño: %u\n", hexchar_to_dec(file->size));
       fread(file->time_creat, 4, 1, filebin);
       fread(file->time_mod, 4, 1, filebin);
       fread(file->punteros_bloq_datos, 1008, 1, filebin);
@@ -117,6 +120,7 @@ int cz_exists(char* filename){
 }
 
 int cz_read(czFILE* file_desc, void* buffer, int nbytes){
+
   return 0;
 }
 
