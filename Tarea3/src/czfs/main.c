@@ -14,11 +14,20 @@ void read_bin(char* data, int bloque, int bytes){
 int main ()
 {
   char filename[11] = "texto.txt";
+<<<<<<< HEAD
   get_indice(filename);
   // unsigned indice = found_file(filename);
   // printf("%u\n", indice);
   //char mode = 'r';
   //cz_open(filename, 'r');
+=======
+  //get_indice(filename);
+  //unsigned indice = found_file(filename);
+  //printf("%u\n", indice);
+  //char mode = 'r';
+  //czFILE* file = cz_open(filename, 'r');
+  //printf("%u\n", hexchar_to_dec(file->size));
+>>>>>>> master
   //cz_ls();
 
 

@@ -54,20 +54,26 @@ unsigned byte_to_decimal(int n, unsigned char* arr){
   return decimalNumber;
 }
 
-unsigned get_indice(char* filename){
+int hexchar_to_dec(char value[4]){
+  int dec;
+  dec = value[0]*pow(16,6) + value[1]*pow(16,4) + value[2]*pow(16, 2) + value[3]*pow(16, 0);
+  return dec;
+}
+
+int get_indice(char* filename){
   /* Se asume que se busca un archivo existente*/
   char bit_valid[1];
   char name[11];
-  unsigned char indice[4];
+  char indice[4];
   //bool found = false;
   char* pathdata = "simdiskfilled.bin";
   FILE* filebin;
   filebin = fopen(pathdata, "rb");
-  for (int i = 0; i < 252; i++) {
-    fseek(filebin, 0, SEEK_CUR);
-    fread(bit_valid, 1, 1, filebin);
-    fread(name, 11, 1, filebin);
-    fread(indice, 4, 1, filebin);
+  fseek(filebin, 0, SEEK_CUR);
+  for (int i = 0; i < 64; i++) {
+    fread(&bit_valid, 1, 1, filebin);
+    fread(&name, 11, 1, filebin);
+    fread(&indice, 4, 1, filebin);
     if (bit_valid[0] == 1) {
       unsigned indice_int = byte_to_decimal(4, indice);
       // if (strncmp(name, filename, 11) == 0){
@@ -77,9 +83,14 @@ unsigned get_indice(char* filename){
     }
   }
   fclose(filebin);
+<<<<<<< HEAD
   unsigned indice_int = byte_to_decimal(4, indice);
   //printf("0x%08x\n", indice);
   return indice_int;
+=======
+  //unsigned indice_int = binary_to_decimal(4, indice);
+  return hexchar_to_dec(indice);
+>>>>>>> master
 }
 
 czFILE* cz_open(char* filename, char mode){
@@ -87,16 +98,19 @@ czFILE* cz_open(char* filename, char mode){
   unsigned indice;
   char r = 'r';
   char w = 'w';
-
   if (mode == r){
+    file->open_mode = r;
     if (cz_exists(filename)) {
       indice = get_indice(filename);
-      /* Buscar el bloque índice,
-      guardar algunos datos en czFILE:
-        size
-        timestamps create
-        timestamps edit
-        punteros a bloques de datos */
+      char* pathdata = "simdiskfilled.bin";
+      FILE* filebin = fopen(pathdata, "rb");
+      fseek(filebin, indice*64, SEEK_CUR);
+      fread(file->size, 4, 1, filebin);
+      fread(file->time_creat, 4, 1, filebin);
+      fread(file->time_mod, 4, 1, filebin);
+      fread(file->punteros_bloq_datos, 1008, 1, filebin);
+      fread(file->indirect_pointer, 4, 1, filebin);
+      fclose(filebin);
       return file;
     } else {
       return NULL;
@@ -117,24 +131,23 @@ czFILE* cz_open(char* filename, char mode){
   return NULL;
 }
 
-
 int cz_exists(char* filename){
   char bit_valid[1];
   char name[11];
+  char indice[11];
   //unsigned char indice[4];
   char* pathdata = "simdiskfilled.bin";
   FILE* filebin;
   filebin = fopen(pathdata, "rb");
-  for (int i = 0; i < 252; i++) {
-    fseek(filebin, 0, SEEK_CUR);
+  fseek(filebin, 0, SEEK_CUR);
+  for (int i = 0; i < 64; i++) {
     fread(bit_valid, 1, 1, filebin);
-    if (bit_valid[0] == 1) {
-      fread(name, 11, 1, filebin);
-      if (strncmp(name, filename, 11) == 0){
-        //fread(indice, 4, 1, filebin);
-        return 1;
-      }
+    fread(name, 11, 1, filebin);
+    if (strncmp(name, filename, 11) == 0){
+      //fread(indice, 4, 1, filebin);
+      return 1;
     }
+    fread(indice, 4, 1, filebin);
   }
   fclose(filebin);
   return 0;
@@ -173,7 +186,7 @@ void cz_ls(){
   FILE* filebin;
   filebin = fopen(pathdata, "rb");
   fseek(filebin, 0, SEEK_SET);
-  for (int i = 0; i < 252; i++) {
+  for (int i = 0; i < 64; i++) {
     fseek(filebin, 0, SEEK_CUR);
     fread(bit_valid, 1, 1, filebin);
     fread(name, 11, 1, filebin);
