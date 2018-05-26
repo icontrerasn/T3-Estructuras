@@ -18,8 +18,8 @@ int main ()
   //unsigned indice = found_file(filename);
   //printf("%u\n", indice);
   //char mode = 'r';
-  czFILE* file = cz_open(filename, 'r');
-  //cz_ls();
+  cz_open(filename, 'r');
+  cz_ls();
 
 
   return 0;

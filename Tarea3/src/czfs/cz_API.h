@@ -6,11 +6,13 @@
 
 struct cz_file{
   char open_mode;
-  char filename[11];
-  char size[4];
+  char filename;
+  int indice;
+  unsigned char size[4];
+  int bytes_read;
   char time_creat[4];
   char time_mod[4];
-  char punteros_bloq_datos[252][4];
+  unsigned char punteros_bloq_datos[252][4];
   char indirect_pointer[4];
 };
 typedef struct cz_file czFILE;
@@ -19,7 +21,7 @@ unsigned found_file(char* filename);
 
 unsigned binary_to_decimal(int n, unsigned char* arr);
 
-int hexchar_to_dec(char value[4]);
+int hexchar_to_dec(unsigned char value[4]);
 
 int get_indice(char* filename);
 

@@ -13,6 +13,15 @@
 //   fread(data, bytes, 1, filebin);
 //   fclose(filebin);
 // }
+int min(int x, int y){
+  if (x < y){
+    return x;
+  }
+  else {
+    return y;
+  }
+}
+
 unsigned binary_to_decimal(int n, unsigned char* arr){
   unsigned decimalNumber = 0;
   for (int i = 0; i < n; i++){
@@ -24,8 +33,8 @@ unsigned binary_to_decimal(int n, unsigned char* arr){
   return decimalNumber*(-1);
 }
 
-int hexchar_to_dec(char value[4]){
-  int dec;
+int hexchar_to_dec(unsigned char value[4]){
+  unsigned int dec;
   dec = value[0]*pow(16,6) + value[1]*pow(16,4) + value[2]*pow(16, 2) + value[3]*pow(16, 0);
   return dec;
 }
@@ -34,7 +43,7 @@ int get_indice(char* filename){
   /* Se asume que se busca un archivo existente*/
   char bit_valid[1];
   char name[11];
-  char indice[4];
+  unsigned char indice[4];
   //bool found = false;
   char* pathdata = "simdiskfilled.bin";
   FILE* filebin;
@@ -63,20 +72,23 @@ czFILE* cz_open(char* filename, char mode){
   char w = 'w';
   if (mode == r){
     file->open_mode = r;
+    file->filename = *filename;
+    file->bytes_read = 0;
     if (cz_exists(filename)) {
       indice = get_indice(filename);
+      file->indice = indice;
       char* pathdata = "simdiskfilled.bin";
       FILE* filebin = fopen(pathdata, "rb");
-      printf("%d\n", indice);
       fseek(filebin, 1024*indice, SEEK_SET);
-
       fread(file->size, 4, 1, filebin);
-      printf("Tamaño: %u\n", hexchar_to_dec(file->size));
       fread(file->time_creat, 4, 1, filebin);
       fread(file->time_mod, 4, 1, filebin);
-      fread(file->punteros_bloq_datos, 1008, 1, filebin);
+      fread(file->punteros_bloq_datos, 4, 252, filebin);
       fread(file->indirect_pointer, 4, 1, filebin);
       fclose(filebin);
+      for (int i = 0; i < 252; i++){
+        printf("PUNTERO: %d\n", hexchar_to_dec(file->punteros_bloq_datos[i]));
+      }
       return file;
     } else {
       return NULL;
@@ -84,7 +96,8 @@ czFILE* cz_open(char* filename, char mode){
   }
   else if (mode == w) {
     if (!(cz_exists(filename))) {
-      //go_on
+      //file->size = 0;
+      return file;
     }
     else{
       return NULL;
@@ -110,7 +123,6 @@ int cz_exists(char* filename){
     fread(bit_valid, 1, 1, filebin);
     fread(name, 11, 1, filebin);
     if (strncmp(name, filename, 11) == 0){
-      //fread(indice, 4, 1, filebin);
       return 1;
     }
     fread(indice, 4, 1, filebin);
@@ -120,7 +132,23 @@ int cz_exists(char* filename){
 }
 
 int cz_read(czFILE* file_desc, void* buffer, int nbytes){
-
+  if (file_desc->open_mode == 'w') {
+    return -1;
+  }
+  char* pathdata = "simdiskfilled.bin";
+  FILE* filebin = fopen(pathdata, "rb");
+  int unread_bytes = hexchar_to_dec(file_desc->size) - file_desc->bytes_read;
+  fseek(filebin, 1024*file_desc->indice, SEEK_SET);
+  if (nbytes <= unread_bytes) {
+    for (int i = 0; i < nbytes; i++){
+      fread(buffer, nbytes, 1, filebin);
+    }
+    return nbytes;
+  }
+  else {
+    fread(buffer, unread_bytes, 1, filebin);
+    return unread_bytes;
+  }
   return 0;
 }
 
