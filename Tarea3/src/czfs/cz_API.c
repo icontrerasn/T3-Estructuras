@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <math.h>
+#include <limits.h>
 #include "cz_API.h"
 
 
@@ -13,15 +14,44 @@
 //   fread(data, bytes, 1, filebin);
 //   fclose(filebin);
 // }
-unsigned binary_to_decimal(int n, unsigned char* arr){
-  unsigned decimalNumber = 0;
+
+void bit_to_byte(int n, unsigned char* arr){
   for (int i = 0; i < n; i++){
-    int a = arr[i] - '0';
+    int output[CHAR_BIT];
+    char c = arr[i];
+    for (int j = 0; j < CHAR_BIT; ++j) {
+      output[i] = (c >> i) & 1;
+      printf("%c\n", c);
+    }
+
+    //int a = arr[i] - '0';
+    //printf("0x%08x\n", a);
     int m = n-1-i;
     int b = pow(2, m);
-    decimalNumber += a*b;
   }
-  return decimalNumber*(-1);
+  printf("\n");
+}
+
+unsigned byte_to_decimal(int n, unsigned char* arr){
+  unsigned decimalNumber = 0;
+  char bin_arr[32];
+  for (int i = 0; i < n; i++){
+    char c = arr[i];
+    static char bin[CHAR_BIT + 1] = {0};
+    for (int j = CHAR_BIT - 1; j >= 0; j--){
+      bin[j] = (c % 2) + '0';
+      c /= 2;
+      bin_arr[i*CHAR_BIT+j] = bin[j];
+    }
+    printf("%s\n", bin);
+
+  }
+  int a = bin_arr - '0';
+  int m = n-1-i;
+  int b = pow(2, m);
+  decimalNumber += a*b;
+  printf("\n");
+  return decimalNumber;
 }
 
 unsigned get_indice(char* filename){
@@ -39,14 +69,16 @@ unsigned get_indice(char* filename){
     fread(name, 11, 1, filebin);
     fread(indice, 4, 1, filebin);
     if (bit_valid[0] == 1) {
-      if (strncmp(name, filename, 11) == 0){
-        //found = true;
-        break;
-      }
+      unsigned indice_int = byte_to_decimal(4, indice);
+      // if (strncmp(name, filename, 11) == 0){
+      //   //found = true;
+      //   break;
+      // }
     }
   }
   fclose(filebin);
-  unsigned indice_int = binary_to_decimal(4, indice);
+  unsigned indice_int = byte_to_decimal(4, indice);
+  //printf("0x%08x\n", indice);
   return indice_int;
 }
 
