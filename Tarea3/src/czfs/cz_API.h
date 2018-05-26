@@ -15,6 +15,8 @@ struct cz_file{
 };
 typedef struct cz_file czFILE;
 
+int directorio(char* filename);
+
 unsigned found_file(char* filename);
 
 unsigned binary_to_decimal(int n, unsigned char* arr);
