@@ -1,21 +1,26 @@
-#include <stdbool.h>
 #include <string.h>
 #include <math.h>
 #include <limits.h>
+#include <errno.h>
 #include "cz_API.h"
+extern int errno ;
+
 char* PATHDATA = "simdiskfilled.bin";
 int SIZEBLOQUE = 1024;
+int DATA = 252;
+int DIREC_ENTRIES = 64;
+int INDIREC_ENTRIES = 256;
 
+int quantity_data(int* array){
+  int count = 0;
+  for (int i = 0; i < DATA; i++) {
+    if (array[i] != 0) {
+      count ++;
+    }
+  }
+  return count;
+}
 
-// void read_bin(char* data, int bloque, int bytes, int pass){
-//   int size_bloque = 1024;
-//   char* pathdata = "simdiskfilled.bin";
-//   FILE* filebin;
-//   filebin = fopen(pathdata, "rb");
-//   fseek(filebin, bloque*size_bloque+pass, SEEK_SET);
-//   fread(data, bytes, 1, filebin);
-//   fclose(filebin);
-// }
 int min(int x, int y){
   if (x < y){
     return x;
@@ -25,35 +30,20 @@ int min(int x, int y){
   }
 }
 
-unsigned binary_to_decimal(int n, unsigned char* arr){
-  unsigned decimalNumber = 0;
-  for (int i = 0; i < n; i++){
-    char c = arr[i];
-    static char bin[CHAR_BIT + 1] = {0};
-    for (int j = CHAR_BIT - 1; j >= 0; j--){
-      bin[j] = (c % 2) + '0';
-      c /= 2;
-      bin_arr[i*CHAR_BIT+j] = bin[j];
-    }
-    printf("%s\n", bin);
-  }
-}
-
 int hexchar_to_dec(unsigned char value[4]){
-  unsigned int dec;
+  int dec;
   dec = value[0]*pow(16,6) + value[1]*pow(16,4) + value[2]*pow(16, 2) + value[3]*pow(16, 0);
   return dec;
 }
 
-
-/* Entrega el índice del archivo filename*/
-int directorio(char* filename){
+/* Entrega el índice del archivo filename */
+int directorio(char* filename, bool _delete){
   int entradas = 64;
   char bit_valid[1];
   char name[11];
-  char indice[11];
+  unsigned char indice[4];
   FILE* filebin;
-  filebin = fopen(PATHDATA, "rb");
+  filebin = fopen(PATHDATA, "rb+");
   fseek(filebin, 0, SEEK_CUR);
   for (int i = 0; i < entradas; i++) {
     fread(bit_valid, 1, 1, filebin);
@@ -63,20 +53,65 @@ int directorio(char* filename){
       break;
     }
   }
+  if (_delete) {
+    unsigned char borrar[1] = "0";
+    fseek(filebin, -16, SEEK_CUR);
+    fwrite(borrar, 1, 1, filebin);
+  }
   fclose(filebin);
   return hexchar_to_dec(indice);
 }
 
-/* Entrega la lista con los bloques que contienen los datos*/
+/* Entrega la lista con los bloques que contienen los datos
+  y el puntero al bloque de direccionamiento indirecto */
 void indice(int indice, int* datos){
   char metadata[12];
-  char bit_datos[1008];
+  unsigned char bit_datos[DATA+1][4];
   FILE* filebin;
   filebin = fopen(PATHDATA, "rb");
   fseek(filebin, indice*SIZEBLOQUE, SEEK_SET);
   fread(metadata, 12, 1, filebin);
-  fread(bit_datos, 1008, 1, filebin);
+  fread(bit_datos, 4, DATA, filebin);
+  fread(bit_datos[DATA], 4, 1, filebin);
+  for (int i = 0; i < DATA+1; i++) {
+    datos[i] = hexchar_to_dec(bit_datos[i]);
+    //printf("%d\n", datos[i]);
+  }
+  fclose(filebin);
+}
 
+/* Bitmap */
+void bitmap(int* bloq_datos, int len_datos, int indice, bool change, unsigned char* option){
+  //unsigned char borrar[1] = "0";
+  FILE* filebin;
+  filebin = fopen(PATHDATA, "rb+");
+  fseek(filebin, SIZEBLOQUE, SEEK_SET);
+  fseek(filebin, SIZEBLOQUE + indice, SEEK_SET);
+  if (change)
+    fwrite(option, 1, 1, filebin);
+  for (int i = 0; i < len_datos; i++) {
+    if (bloq_datos[i] != 0) {
+      fseek(filebin, SIZEBLOQUE + bloq_datos[i], SEEK_SET);
+      if (change)
+        fwrite(option, 1, 1, filebin);
+    }
+  }
+  fclose(filebin);
+}
+
+/* Entrega una lista con los bloques que contienen más datos
+  desde el bloque de direccionamiento indirecto */
+void bindirecto(int bloque, int* bloq_datos){
+  unsigned char punteros_datos[INDIREC_ENTRIES][4];
+  FILE* filebin;
+  filebin = fopen(PATHDATA, "rb");
+  fseek(filebin, bloque*SIZEBLOQUE, SEEK_SET);
+  fread(punteros_datos, 4, INDIREC_ENTRIES, filebin);
+  for (int i = 0; i < INDIREC_ENTRIES; i++) {
+    bloq_datos[i] = hexchar_to_dec(punteros_datos[i]);
+    //printf("%d\n", bloq_datos[i]);
+  }
+  fclose(filebin);
 }
 
 czFILE* cz_open(char* filename, char mode){
@@ -89,7 +124,7 @@ czFILE* cz_open(char* filename, char mode){
     file->filename = *filename;
     file->bytes_read = 0;
     if (cz_exists(filename)) {
-      indice = get_indice(filename);
+      indice = directorio(filename, false);
       file->indice = indice;
       char* pathdata = "simdiskfilled.bin";
       FILE* filebin = fopen(pathdata, "rb");
@@ -100,9 +135,9 @@ czFILE* cz_open(char* filename, char mode){
       fread(file->punteros_bloq_datos, 4, 252, filebin);
       fread(file->indirect_pointer, 4, 1, filebin);
       fclose(filebin);
-      for (int i = 0; i < 252; i++){
-        printf("PUNTERO: %d\n", hexchar_to_dec(file->punteros_bloq_datos[i]));
-      }
+      // for (int i = 0; i < 252; i++){
+      //   printf("PUNTERO: %d\n", hexchar_to_dec(file->punteros_bloq_datos[i]));
+      // }
       return file;
     } else {
       return NULL;
@@ -133,13 +168,14 @@ int cz_exists(char* filename){
   FILE* filebin;
   filebin = fopen(PATHDATA, "rb");
   fseek(filebin, 0, SEEK_CUR);
-  for (int i = 0; i < 64; i++) {
+  for (int i = 0; i < DIREC_ENTRIES; i++) {
     fread(bit_valid, 1, 1, filebin);
     fread(name, 11, 1, filebin);
-    if (strncmp(name, filename, 11) == 0){
-      //fread(indice, 4, 1, filebin);
-      fclose(filebin);
-      return 1;
+    if (bit_valid[0] == 1){
+      if (strncmp(name, filename, 11) == 0){
+        fclose(filebin);
+        return 1;
+      }
     }
     fread(indice, 4, 1, filebin);
   }
@@ -169,6 +205,7 @@ int cz_read(czFILE* file_desc, void* buffer, int nbytes){
   return 0;
 }
 
+
 int cz_write(czFILE* file_desc, void* buffer, int nbytes){
   return 0;
 }
@@ -178,7 +215,9 @@ int cz_close(czFILE* file_desc){
   return 0;
 }
 
+/* Cambiar nombre a archivo */
 int cz_mv(char* orig, char *dest){
+  int errnum;
   char bit_valid[1];
   char name[11];
   char indice[11];
@@ -187,14 +226,15 @@ int cz_mv(char* orig, char *dest){
       FILE* filebin;
       filebin = fopen(PATHDATA, "rb+");
       fseek(filebin, 0, SEEK_SET);
-      for (int i = 0; i < 64; i++) {
+      for (int i = 0; i < DIREC_ENTRIES; i++) {
         fread(bit_valid, 1, 1, filebin);
         fread(name, 11, 1, filebin);
-        printf("%s\n", name);
-        if (strncmp(name, orig, 11) == 0){
-          fseek(filebin, -11, SEEK_CUR);
-          fwrite(dest, 11, 1, filebin);
-          break;
+        if (bit_valid[0] == 1){
+          if (strncmp(name, orig, 11) == 0){
+            fseek(filebin, -11, SEEK_CUR);
+            fwrite(dest, 11, 1, filebin);
+            break;
+          }
         }
         fread(indice, 4, 1, filebin);
       }
@@ -202,50 +242,128 @@ int cz_mv(char* orig, char *dest){
       return 0;
     }
     else{
-      printf("Nombre de archivo ya existe\n");
+      errnum = errno;
+      fprintf(stderr, "File name already exists: %s\n", strerror(errnum));
       return 1;
     }
   }
   else{
-    printf("Archivo no existe\n");
+    errnum = errno;
+    fprintf(stderr, "File doesn't exists: %s\n", strerror(errnum));
     return 1;
   }
 }
 
 
+/* Copiar archivo FALTA*/
 int cz_cp(char* orig, char* dest){
-  return 0;
-}
+  int errnum;
+  if (cz_exists(orig)){
+    if (!(cz_exists(dest))){
+      czFILE* orig_file = malloc(sizeof(czFILE));
+      orig_file = cz_open(orig, 'r');
+      int bloques_datos[DATA];
+      for (int i = 0; i < DATA; i++){
+        bloques_datos[i] = hexchar_to_dec(orig_file->punteros_bloq_datos[i]);
+      }
+      int len_file = quantity_data(bloques_datos);
 
-int cz_rm(char* filename){
-  char bit_valid[1];
-  char name[11];
-  char indice[11];
-  if (cz_exists(filename)){
+      int indirecto = hexchar_to_dec(orig_file->indirect_pointer);
+      int more_bloques_datos[INDIREC_ENTRIES];
+      bindirecto(indirecto, more_bloques_datos);
+      len_file += quantity_data(more_bloques_datos);
+      len_file += 1;
+
+      int bloques_dest[len_file];
+      int indice = 0;
+      //if (len_file-1 <= DATA) { //No se necesita bloque de direc indirecto
       FILE* filebin;
       filebin = fopen(PATHDATA, "rb+");
-      fseek(filebin, 0, SEEK_SET);
-      for (int i = 0; i < 64; i++) {
-        fread(bit_valid, 1, 1, filebin);
-        fread(name, 11, 1, filebin);
-        printf("%s\n", name);
-        if (strncmp(name, filename, 11) == 0){
-          fseek(filebin, -12, SEEK_CUR);
-          fwrite(0, 1, 1, filebin);
+      fseek(filebin, SIZEBLOQUE + 8, SEEK_SET);
+      int pos = 0;
+      for (int i = 0; i < SIZEBLOQUE*DIREC_ENTRIES-8; i++) {
+        unsigned char bit[1];
+        fread(bit, 1, 1, filebin);
+        if (pos == len_file) {
           break;
+        } else{
+          if (bit[0] == 0){
+            if (indice == 0)
+              indice = 9+i;
+            else
+              bloques_dest[pos] = 9+i;
+              pos += 1;
+          }
         }
-        fread(indice, 4, 1, filebin);
       }
-      fclose(filebin);
+      if (pos != len_file) {
+        fclose(filebin);
+        printf("No hay espacio suficiente para copiar el archivo\n");
+        return 1;
+      } else{
+        // Crear archivo en directorio
+        fseek(filebin, 0, SEEK_SET);
+        for (int i = 0; i < DIREC_ENTRIES; i++) {
+          char bit_valid[1];
+          char name[11];
+          char ind[11];
+          fread(bit_valid, 1, 1, filebin);
+          fread(name, 11, 1, filebin);
+          if (bit_valid[0] == 0){
+            fseek(filebin, -11, SEEK_CUR);
+            fwrite(dest, 11, 1, filebin);
+            //char indice_char = indice + '0';
+            //fwrite(indice_char, 4, 1, filebin);
+            fclose(filebin);
+            break;
+          }
+          fread(ind, 4, 1, filebin);
+        }
+        // Reservar bits en bitmap
+        //unsigned char reservar[1] = "1";
+        //bitmap(bloques_dest, len_file, indice, true, reservar);
+
+      }
+
       return 0;
+    }
+    else{
+      errnum = errno;
+      fprintf(stderr, "File name already exists: %s\n", strerror(errnum));
+      return 1;
+    }
   }
   else{
-    printf("Archivo no existe\n");
+    errnum = errno;
+    fprintf(stderr, "File doesn't exists: %s\n", strerror(errnum));
     return 1;
   }
 }
 
+/* Elminar archivo */
+int cz_rm(char* filename){
+  int errnum;
+  if (cz_exists(filename)){
+    int ind = directorio(filename, true);
+    int bloq_datos[DATA+1];
+    indice(ind, bloq_datos);
+    int bloque_indirecto = bloq_datos[DATA];
+    int more_bloq_datos[INDIREC_ENTRIES];
+    bindirecto(bloque_indirecto, more_bloq_datos);
+    unsigned char borrar[1] = "0";
+    bitmap(bloq_datos, DATA, ind, true, borrar);
+    bitmap(more_bloq_datos, INDIREC_ENTRIES, bloque_indirecto, true, borrar);
 
+    return 0;
+  }
+  else{
+    errnum = errno;
+    fprintf(stderr, "File doesn't exists: %s\n", strerror(errnum));
+    return 1;
+  }
+}
+
+/* Mostrar todos los archivos */
 void cz_ls(){
   char bit_valid[1];
   char name[11];

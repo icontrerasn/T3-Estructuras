@@ -13,23 +13,6 @@
 
 int main ()
 {
-  char filename[11] = "aaaaa.gif";
-  char change[11] = "change.txt";
-  int x = directorio(change);
-  printf("%d\n", x);
-  //get_indice(filename);
-  //cz_mv(filename, change);
-  //cz_ls();
-  // unsigned indice = found_file(filename);
-  // printf("%u\n", indice);
-  //char mode = 'r';
-  //cz_open(filename, 'r');
-  //get_indice(filename);
-  //unsigned indice = found_file(filename);
-  //printf("%u\n", indice);
-  //char mode = 'r';
-  cz_open(filename, 'r');
-  cz_ls();
 
 
   return 0;
