@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include "cz_API.h"
@@ -138,18 +139,39 @@ int cz_read(czFILE* file_desc, void* buffer, int nbytes){
   char* pathdata = "simdiskfilled.bin";
   FILE* filebin = fopen(pathdata, "rb");
   int unread_bytes = hexchar_to_dec(file_desc->size) - file_desc->bytes_read;
-  fseek(filebin, 1024*file_desc->indice, SEEK_SET);
-  if (nbytes <= unread_bytes) {
-    for (int i = 0; i < nbytes; i++){
-      fread(buffer, nbytes, 1, filebin);
+  int starting_block = (file_desc->bytes_read) / 1024;
+  int first_block_jump = (file_desc->bytes_read) % 1024;
+  int last_block_jump = (unread_bytes - first_block_jump) % 1024;
+  int bytes_to_read = min(nbytes, unread_bytes);
+  int blocks_to_read = first_block_jump + bytes_to_read / 1024;
+  if ((first_block_jump + bytes_to_read) % 1024){
+    blocks_to_read ++;
+  }
+  if (bytes_to_read == 0 || bytes_to_read < 0){
+    return -1;
+  }
+  int redirect = 0;
+  int to_write = 1024;
+  for (int i = starting_block; i < starting_block + blocks_to_read; i++){
+    if (i == starting_block + blocks_to_read){
+      to_write = last_block_jump;
     }
-    return nbytes;
+    if (redirect){
+      fseek(filebin, 0, SEEK_CUR);
+      char temp_buff[to_write];
+      fread(temp_buff, to_write, 1, filebin);
+      fwrite(temp_buff, to_write, 1, buffer);
+    }
+    fseek(filebin, hexchar_to_dec(file_desc->punteros_bloq_datos[i]), SEEK_SET);
+    char temp_buff[to_write];
+    fread(temp_buff, to_write, 1, filebin);
+    fwrite(temp_buff, to_write, 1, buffer);
+    if ((i + 1) % 252 == 0){
+      redirect = hexchar_to_dec(file_desc->punteros_bloq_datos[i]);
+      fseek(filebin, redirect, SEEK_SET);
+    }
   }
-  else {
-    fread(buffer, unread_bytes, 1, filebin);
-    return unread_bytes;
-  }
-  return 0;
+  return bytes_to_read;
 }
 
 int cz_write(czFILE* file_desc, void* buffer, int nbytes){
