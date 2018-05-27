@@ -87,9 +87,6 @@ czFILE* cz_open(char* filename, char mode){
       fread(file->punteros_bloq_datos, 4, 252, filebin);
       fread(file->indirect_pointer, 4, 1, filebin);
       fclose(filebin);
-      for (int i = 0; i < 252; i++){
-        printf("PUNTERO: %d\n", hexchar_to_dec(file->punteros_bloq_datos[i]));
-      }
       return file;
     } else {
       return NULL;
@@ -97,7 +94,6 @@ czFILE* cz_open(char* filename, char mode){
   }
   else if (mode == w) {
     if (!(cz_exists(filename))) {
-      //file->size = 0;
       return file;
     }
     else{
@@ -148,6 +144,7 @@ int cz_read(czFILE* file_desc, void* buffer, int nbytes){
     blocks_to_read ++;
   }
   if (bytes_to_read == 0 || bytes_to_read < 0){
+    fclose(filebin);
     return -1;
   }
   int redirect = 0;
@@ -158,23 +155,28 @@ int cz_read(czFILE* file_desc, void* buffer, int nbytes){
     }
     if (redirect){
       fseek(filebin, 0, SEEK_CUR);
-      char temp_buff[to_write];
+      unsigned char temp_buff[to_write];
       fread(temp_buff, to_write, 1, filebin);
       fwrite(temp_buff, to_write, 1, buffer);
     }
     fseek(filebin, hexchar_to_dec(file_desc->punteros_bloq_datos[i]), SEEK_SET);
-    char temp_buff[to_write];
+    unsigned char temp_buff[to_write];
     fread(temp_buff, to_write, 1, filebin);
     fwrite(temp_buff, to_write, 1, buffer);
     if ((i + 1) % 252 == 0){
       redirect = hexchar_to_dec(file_desc->punteros_bloq_datos[i]);
       fseek(filebin, redirect, SEEK_SET);
     }
+  file_desc->bytes_read += bytes_to_read;
   }
+  fclose(filebin);
   return bytes_to_read;
 }
 
 int cz_write(czFILE* file_desc, void* buffer, int nbytes){
+  int blocks;
+  blocks = (nbytes - 1 / 1024);
+  blocks ++;
   return 0;
 }
 

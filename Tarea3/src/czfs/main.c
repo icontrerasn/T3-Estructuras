@@ -13,11 +13,9 @@ void read_bin(char* data, int bloque, int bytes){
 
 int main ()
 {
-  char filename[11] = "chest.wav";
-  //get_indice(filename);
-  //unsigned indice = found_file(filename);
-  //printf("%u\n", indice);
-  //char mode = 'r';
+  char filename[11] = "texto.txt";
+  get_indice(filename);
+  cz_cp('texto')
   cz_open(filename, 'r');
   cz_ls();
 
