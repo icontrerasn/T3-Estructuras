@@ -15,11 +15,14 @@ int main ()
 {
   char filename[11] = "texto.txt";
   get_indice(filename);
-  cz_cp('texto')
+  czFILE* new_file = cz_open('new_file.txt', 'w');
+  cz_cp('texto.txt', 'new_file.txt');
   cz_open(filename, 'r');
+  cz_mv('text.txt', 'nuevo_texto.txt');
+  cz_rm('nuevo_texto.txt');
   cz_ls();
-
-
+  printf("Existe smile.png: %d", cz_exists('smile.png'));
+  printf("Existe smile.jpg: %d", cz_exists('smile.jpg'));
   return 0;
 }
 
