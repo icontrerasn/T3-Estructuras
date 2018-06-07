@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 
 struct cz_file{
@@ -13,17 +14,10 @@ struct cz_file{
   char time_creat[4];
   char time_mod[4];
   unsigned char punteros_bloq_datos[252][4];
-  char indirect_pointer[4];
+  unsigned char indirect_pointer[4];
+
 };
 typedef struct cz_file czFILE;
-
-unsigned found_file(char* filename);
-
-unsigned binary_to_decimal(int n, unsigned char* arr);
-
-int hexchar_to_dec(unsigned char value[4]);
-
-int get_indice(char* filename);
 
 czFILE* cz_open(char* filename, char mode);
 
