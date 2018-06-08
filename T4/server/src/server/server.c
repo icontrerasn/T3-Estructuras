@@ -8,6 +8,9 @@
 #include<netdb.h>
 #include "utilities.h"
 
+#include<server.h>
+#include<game.h>
+
 int main(int argc, char **argv){
   if(argc<5){
     printf("./server -i <ip_address> -p <tcp-port>\n");
