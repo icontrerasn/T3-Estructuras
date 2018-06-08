@@ -6,6 +6,7 @@
 #include<arpa/inet.h>
 #include<netinet/in.h>
 #include<netdb.h>
+#include "utilities.h"
 
 int main(int argc, char **argv){
   if(argc<5){
@@ -54,6 +55,7 @@ int main(int argc, char **argv){
   {
     printf("%s\n", buffer);
     bzero((char *)&buffer, sizeof(buffer));
+    
     send(conexion_cliente, "Recibido\n", 13, 0);
   }
   close(conexion_servidor);
