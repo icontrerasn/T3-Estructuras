@@ -6,6 +6,7 @@
 #include<sys/socket.h>
 #include<netinet/in.h>
 #include<netdb.h>
+
 int main(int argc, char **argv){
   if(argc<5){
     printf("./client -i <ip_address> -p <tcp-port>\n");
@@ -22,7 +23,7 @@ int main(int argc, char **argv){
   int puerto, conexion, host;
   char buffer[100];
   puerto = atoi(argv[4]); //conversion del argumento
-  
+
   conexion = socket(AF_INET, SOCK_STREAM, 0); //Asignación del socket
   bzero((char *)&cliente, sizeof(cliente)); //Rellena toda la estructura de 0's
         //La función bzero() es como memset() pero inicializando a 0 todas la variables
