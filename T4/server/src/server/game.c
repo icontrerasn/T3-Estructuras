@@ -1,19 +1,18 @@
-#include <game.h>
+#include "game.h"
 
-char int_to_byte(int number){
-  char byte[8] = "";
-  for (int i = 0; i < 8; i++){
-    char buffer[1] = "";
-    if (number % 2 == 1){
-      buffer = '1';
-    } else {
-      buffer = '0';
-    }
-    number = number / 2;
-    byte = strcat(buffer, byte);
-  }
-  return *byte;
-}
+// char int_to_byte(int number){
+//   char byte[8];
+//   for (int i = 0; i < 8; i++){
+//     //char buffer[1];
+//     if (number % 2 == 1){
+//       byte[i] = '1';
+//     } else {
+//       byte[i] = '0';
+//     }
+//     number = number / 2;
+//   }
+//   return *byte;
+// }
 
 int byte_to_int(char byte[8]){
   int number = 0;
@@ -26,14 +25,14 @@ int byte_to_int(char byte[8]){
 Card* random_card(){
   int card_number = (rand() % 13) + 1;
   int card_color = (rand() % 4) + 1;
-  Card* new_card;
+  Card* new_card = malloc(sizeof(Card));
   new_card->number = card_number;
   new_card->color =  card_color;
   return new_card;
 }
 
 Hand* generate_hand(char cards[80]){
-  Hand* new_hand;
+  Hand* new_hand = malloc(sizeof(Hand));
   for (int i = 0; i < 5; i++){
     new_hand->cards[i] = random_card();
   }
@@ -50,7 +49,7 @@ void complete_hand(Hand* hand){
 
 void sort_hand(Hand* hand){
   for (int i = 0; i < 4; i++){
-    Card* highest_card;
+    Card* highest_card = malloc(sizeof(Card));
     highest_card->number = 0;
     int position;
     for (int j = i; j < 5; j++)
