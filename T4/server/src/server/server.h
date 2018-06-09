@@ -9,6 +9,6 @@
 #include<netinet/in.h>
 #include<netdb.h>
 
-#include <game.h>
+#include "game.h"
 
 void *handler(void *conexion_servidor);

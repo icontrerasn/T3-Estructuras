@@ -129,7 +129,11 @@ void decod_package(char* package, int conexion){
         break;
 
       case ERROR_NOT_IM:
+        printf("Error al recibir\n");
         break;
+
+      default:
+        make_package(buffer, ERROR_NOT_IM, 0, NULL);
   }
 }
 

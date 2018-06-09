@@ -9,9 +9,9 @@
 #include "utilities.h"
 #include <pthread.h>
 
-#include <server.h>
+#include "server.h"
 
-#include"game.h"
+#include "game.h"
 
 #define START_CONNECTION 1
 #define CONN_ESTABLISHED 2
@@ -38,7 +38,7 @@
 #define IMAGE 23
 #define ERROR_NOT_IM 24
 
-#define LEN_MESSAGE 2000
+#define LEN_MESSAGE 16000
 Game* game;
 
 void make_package(char package[LEN_MESSAGE], int id, int p_size, char *payload){
@@ -66,18 +66,18 @@ void decod_package(char* package, int conexion_cliente){
   strncpy(payload, package + 16, size);
   printf("%d\n", size);
 
-  char buf[LEN_MESSAGE];
+  char buffer[LEN_MESSAGE];
 
   switch (id) {
     case START_CONNECTION:
       //printf("recibido\n");
-      make_package(buf, CONN_ESTABLISHED, 0, NULL);
-      send(conexion_cliente, buf, LEN_MESSAGE, 0);
-      bzero(buf, LEN_MESSAGE);
+      make_package(buffer, CONN_ESTABLISHED, 0, NULL);
+      send(conexion_cliente, buffer, LEN_MESSAGE, 0);
+      bzero(buffer, LEN_MESSAGE);
 
-      make_package(buf, ASK_NICKNAME, 0, NULL);
-      send(conexion_cliente, buf, LEN_MESSAGE, 0);
-      bzero(buf, LEN_MESSAGE);
+      make_package(buffer, ASK_NICKNAME, 0, NULL);
+      send(conexion_cliente, buffer, LEN_MESSAGE, 0);
+      bzero(buffer, LEN_MESSAGE);
       break;
 
     case RET_NICKNAME:
@@ -89,38 +89,42 @@ void decod_package(char* package, int conexion_cliente){
       // send(conexion, buffer, LEN_MESSAGE, 0);
       // bzero(buffer, LEN_MESSAGE);
 
-      make_package(buf, OPP_FOUND, 0, NULL);
+      make_package(buffer, OPP_FOUND, 0, NULL);
 
       char pot[4] = "1000";
-      make_package(buf, INITIAL_POT, 4, pot);
+      make_package(buffer, INITIAL_POT, 4, pot);
 
-      make_package(buf, GAME_START, 0, NULL);
+      make_package(buffer, GAME_START, 0, NULL);
 
-      //make_package(buf, START_ROUND, 0, NULL);
-      //make_package(buf, INITIAL_BET, 0, NULL);
-      //make_package(buf, FIVE_CARDS, 0, NULL);
-      //make_package(buf, FIRST, 1, NULL);
-      //make_package(buf, GET_CHANGE_CARDS, 0, NULL);
+      //make_package(buffer, START_ROUND, 0, NULL);
+      //make_package(buffer, INITIAL_BET, 0, NULL);
+      //make_package(buffer, FIVE_CARDS, 0, NULL);
+      //make_package(buffer, FIRST, 1, NULL);
+      //make_package(buffer, GET_CHANGE_CARDS, 0, NULL);
       break;
 
     case RET_CHANGE_CARDS:
-      char bet[5] = {"1", "2", "3", "4", "5"};
-      make_package(buf, GET_BET, 5, bet);
+      // char bet[5] = {"1", "2", "3", "4", "5"};
+      // make_package(buffer, GET_BET, 5, bet);
       break;
 
     case RET_BET:
-      //make_package(buf, ERROR_BET, 0, NULL);
-      make_package(buf, OK_BET, 0, NULL);
-      make_package(buf, END_ROUND, 0, NULL);
-      //make_package(buf, SHOW_OPP_CARDS, 10, NULL);
-      //make_package(buf, WINNER_LOSER, 1, NULL);
+      //make_package(buffer, ERROR_BET, 0, NULL);
+      make_package(buffer, OK_BET, 0, NULL);
+      make_package(buffer, END_ROUND, 0, NULL);
+      //make_package(buffer, SHOW_OPP_CARDS, 10, NULL);
+      //make_package(buffer, WINNER_LOSER, 1, NULL);
       char monto[7];
-      //make_package(buf, UPDATE_POT, 7, monto);
-      make_package(buf, GAME_END, 0, NULL);
+      //make_package(buffer, UPDATE_POT, 7, monto);
+      make_package(buffer, GAME_END, 0, NULL);
       break;
 
     case ERROR_NOT_IM:
+      printf("Error al recibir\n");
       break;
+
+    default:
+      make_package(buffer, ERROR_NOT_IM, 0, NULL);
 
   }
 }
@@ -135,7 +139,7 @@ int main(int argc, char **argv){
   socklen_t longc; //Debemos declarar una variable que contendrá la longitud de la estructura
   struct sockaddr_in servidor, cliente;
 
-  char buffer[LEN_MESSAGE]; //Declaramos una variable que contendrá los mensajes que recibamos
+  //char buffer[LEN_MESSAGE]; //Declaramos una variable que contendrá los mensajes que recibamos
   puerto = atoi(argv[4]);
   host = atoi(argv[2]);
 
@@ -178,8 +182,7 @@ int main(int argc, char **argv){
 void *handler(void *conexion_servidor){
     int read_size;
     int sock = *(int*)conexion_servidor;
-    char server_message[16000];
-    char client_message[16000];
+    char client_message[LEN_MESSAGE];
 
     if (!game->socket[0]){
       game->socket[0] = sock;
@@ -187,11 +190,8 @@ void *handler(void *conexion_servidor){
       game->socket[1] = sock;
     }
 
-    while( (read_size = recv(sock, client_message, 16000, 0)) > 0){
-      //printf("%s\n", buffer);
-      //bzero((char *)&buffer, sizeof(buffer));
-      //send(conexion_cliente, "Recibido\n", 13, 0);
-
+    while((read_size = recv(sock, client_message, LEN_MESSAGE, 0)) > 0){
+      //decod_package(client_message, sock);
     }
     if (read_size == 0){
       printf("El cliente se ha desconectado\n");
