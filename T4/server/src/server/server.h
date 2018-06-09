@@ -10,3 +10,5 @@
 #include<netdb.h>
 
 #include <game.h>
+
+void *handler(void *conexion_servidor);

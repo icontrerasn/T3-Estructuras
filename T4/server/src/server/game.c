@@ -29,7 +29,12 @@ Card* random_card(){
   Card* new_card;
   new_card->number = card_number;
   new_card->color =  card_color;
-  return new_card;
+  if (new_card->available){
+    new_card->available = 0;
+    return new_card;
+  } else {
+    return random_card();
+  }
 }
 
 Hand* generate_hand(char cards[80]){
@@ -38,6 +43,36 @@ Hand* generate_hand(char cards[80]){
     new_hand->cards[i] = random_card();
   }
   return new_hand;
+}
+
+Deck* generate_deck(){
+  Deck* deck;
+  int card_number = 0;
+  for (int i = 1; i < 13; i++){
+    for (int j = 1; j < 5; j++){
+      Card* card;
+      card->number = i;
+      card->color = j;
+      card->available = 1;
+      deck->cards[card_number] = card;
+      card_number++;
+    }
+  }
+}
+
+void set_deck_available(Deck* deck){
+  for (int i = 0; i < 52; i++){
+    deck->cards[i]->available = 1;
+  }
+}
+
+Game* create_game(){
+  Game* game;
+  game->socket[0] = -1;
+  game->socket[1] = -1;
+  game->player_1_pot = 1000;
+  game->player_2_pot = 1000;
+  game->deck = generate_deck();
 }
 
 void complete_hand(Hand* hand){
@@ -78,14 +113,14 @@ int check_royal_flush(Hand* hand){
       return 0;
     }
   }
-  return 1;
+  return 22;
 }
 
 int check_straight_flush(Hand* hand){
   if (check_straight(hand) && check_color(hand)){
     return 1;
   }
-  return 0;
+  return 21;
 }
 
 int check_poquer(Hand* hand){
@@ -97,7 +132,7 @@ int check_poquer(Hand* hand){
      }
    }
    if (count == 4){
-     return 1;
+     return 20;
    }
  }
  return 0;
@@ -105,7 +140,7 @@ int check_poquer(Hand* hand){
 
 int check_full(Hand* hand){
   if (check_three(hand) && check_two(hand)){
-    return 1;
+    return 19;
   }
   return 0;
 }
@@ -116,7 +151,7 @@ int check_color(Hand* hand){
       return 0;
     }
   }
-  return 1;
+  return 18;
 }
 
 int check_straight(Hand* hand){
@@ -132,7 +167,7 @@ int check_straight(Hand* hand){
       }
     }
   }
-  return 1;
+  return 17;
 }
 
 int check_three(Hand* hand){
@@ -144,7 +179,7 @@ int check_three(Hand* hand){
       }
     }
     if (count == 3){
-      return 1;
+      return 16;
     }
   }
   return 0;
@@ -164,7 +199,7 @@ int check_double_two(Hand* hand){
     }
   }
   if (pairs > 2){
-    return 1;
+    return 15;
   }
   return 0;
 }
@@ -178,7 +213,7 @@ int check_two(Hand* hand){
       }
     }
     if (count == 2){
-      return 1;
+      return 14;
     }
   }
   return 0;
@@ -192,4 +227,42 @@ int check_highest(Hand* hand){
     }
   }
   return highest;
+}
+
+int view_points(Hand* hand){
+  int points;
+  if (check_royal_flush(hand)){
+    points = 22;
+  } else if (check_straight_flush(hand)){
+    points = 21;
+  } else if (check_poquer(hand)){
+    points = 20;
+  } else if (check_full(hand)){
+    points = 19;
+  } else if (check_color(hand)){
+    points = 18;
+  } else if (check_straight(hand)){
+    points = 17;
+  } else if (check_three(hand)){
+    points = 16;
+  } else if (check_double_two(hand)){
+    points = 15;
+  } else if (check_two(hand)){
+    points = 14;
+  } else {
+    points = check_highest(hand);
+  }
+  return points;
+}
+
+int determine_winner(Hand* hand_1, Hand* hand_2){
+  int points_player_1 = view_points(hand_1);
+  int points_player_2 = view_points(hand_2);
+  if (points_player_1 > points_player_2){
+    return 1;
+  } else if (points_player_2 > points_player_1){
+    return 2;
+  } else if (points_player_1 == points_player_2){
+    return 0;;
+  }
 }
