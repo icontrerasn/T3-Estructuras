@@ -33,7 +33,7 @@
 #define IMAGE 23
 #define ERROR_NOT_IM 24
 
-#define LEN_MESSAGE 2100
+#define LEN_MESSAGE 2000
 
 void make_package(char package[LEN_MESSAGE], int id, int p_size, char *payload){
   char* message_id = decimal_to_binary(id);
@@ -43,7 +43,6 @@ void make_package(char package[LEN_MESSAGE], int id, int p_size, char *payload){
   if (p_size != 0) {
     memcpy(package + 16, payload, p_size);
   }
-  printf("%s\n", package);
 }
 
 void decod_package(char* package, int conexion){
@@ -55,8 +54,8 @@ void decod_package(char* package, int conexion){
   memcpy(payload_size, package + 8, 8);
   int size = binary_to_decimal(8, payload_size);
 
+  char payload[size];
   if (size != 0) {
-    char payload[size];
     memcpy(payload, package + 16, size);
   }
 
@@ -67,77 +66,79 @@ void decod_package(char* package, int conexion){
     case ASK_NICKNAME:
       printf("Ingresa tu nombre: \n");
       scanf("%s", nickname);
-      printf("%lu\n", strlen(nickname));
       make_package(buffer, RET_NICKNAME, strlen(nickname), nickname);
-      send(conexion, buffer, 16+strlen(nickname), 0);
-      bzero(buffer, LEN_MESSAGE);
+      send(conexion, buffer, LEN_MESSAGE, 0);
+      //bzero(buffer, LEN_MESSAGE);
       break;
 
-      case OPP_FOUND:
-        printf("Tu oponente es: \n");
-        break;
+    case OPP_FOUND:
+      printf("Encontramos un oponente!! Es: %s\n", payload);
+      break;
 
-      case INITIAL_POT:
-        printf("Tu monto inicial para apostar es: \n");
-        break;
+    case INITIAL_POT:
+      printf("Tu monto inicial para apostar es: %s\n", payload);
+      break;
 
-      case GAME_START:
-        printf("QUE EMPICE EL JUEGO\n");
-        break;
+    case GAME_START:
+      printf("QUE EMPICE EL JUEGO\n");
+      break;
 
-      case START_ROUND:
+    case START_ROUND:
       printf("Tu dinero: \n");
-        break;
+      break;
 
-      case INITIAL_BET:
-        break;
+    case INITIAL_BET:
+      break;
 
-      case FIVE_CARDS:
-        break;
+    case FIVE_CARDS:
+      break;
 
-      case FIRST:
-        break;
+    case FIRST:
+      break;
 
-      case GET_CHANGE_CARDS:
-        break;
+    case GET_CHANGE_CARDS:
+      break;
 
-      case GET_BET:
-        break;
+    case GET_BET:
+      break;
 
-      case ERROR_BET:
-        break;
+    case ERROR_BET:
+      break;
 
-      case OK_BET:
-        break;
+    case OK_BET:
+      break;
 
-      case END_ROUND:
-        break;
+    case END_ROUND:
+      break;
 
-      case SHOW_OPP_CARDS:
-        break;
+    case SHOW_OPP_CARDS:
+      break;
 
-      case WINNER_LOSER:
-        break;
+    case WINNER_LOSER:
+      break;
 
-      case UPDATE_POT:
-        break;
+    case UPDATE_POT:
+      break;
 
-      case GAME_END:
-        break;
+    case GAME_END:
+      break;
 
-      case IMAGE:
-        break;
+    case IMAGE:
+      break;
 
-      case ERROR_NOT_IM:
-        break;
+    case ERROR_NOT_IM:
+      break;
   }
 }
 
 int main(int argc, char **argv){
-  if(argc<5){
-    printf("./client -i <ip_address> -p <tcp-port>\n");
+  if ((argc == 5) && (((strcmp("-i", argv[1]) == 0) && strcmp("-p", argv[3]) == 0) || ((strcmp("-p", argv[1]) == 0) && strcmp("-i", argv[3]) == 0))){
+
+  } else{
+    printf("./server -i <ip_address> -p <tcp-port>\n");
     return 1;
   }
+  
   struct sockaddr_in cliente; //Declaración de la estructura con información para la conexión
   //struct hostent *servidor; //Declaración de la estructura con información del host
   char* servidor;

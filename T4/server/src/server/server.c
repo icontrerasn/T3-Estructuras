@@ -129,10 +129,13 @@ void decod_package(char* package, int conexion_cliente){
 int main(int argc, char **argv){
   game = create_game();
 
-  if(argc<5){
+  if ((argc == 5) && (((strcmp("-i", argv[1]) == 0) && strcmp("-p", argv[3]) == 0) || ((strcmp("-p", argv[1]) == 0) && strcmp("-i", argv[3]) == 0))){
+
+  } else{
     printf("./server -i <ip_address> -p <tcp-port>\n");
     return 1;
   }
+
   int conexion_servidor, conexion_cliente, puerto, *new_sock; //declaramos las variables
   char* host;
   socklen_t longc; //Debemos declarar una variable que contendrá la longitud de la estructura
@@ -181,21 +184,86 @@ int main(int argc, char **argv){
 
 void *handler(void *conexion_servidor){
     int read_size;
-    int sock = *(int*)conexion_servidor;
-
-    char server_message[16000];
-    char client_message[16000];
+    int conexion_cliente = *(int*)conexion_servidor;
+    char client_message[LEN_MESSAGE];
 
     if (!game->socket[0]){
-      game->socket[0] = sock;
+      game->socket[0] = conexion_cliente;
     } else {
-      game->socket[1] = sock;
+      game->socket[1] = conexion_cliente;
     }
 
-    while( (read_size = recv(sock, client_message, 16000, 0)) > 0){
-      //printf("%s\n", buffer);
-      //bzero((char *)&buffer, sizeof(buffer));
-      //send(conexion_cliente, "Recibido\n", 13, 0);
+    while( (read_size = recv(conexion_cliente, client_message, 16000, 0)) > 0){
+      char message_id[8];
+      memcpy(message_id, client_message, 8);
+      int id = binary_to_decimal(8, message_id);
+      printf("Id %d\n", id);
+
+      char payload_size[8];
+      memcpy(payload_size, client_message + 8, 8);
+      int size = binary_to_decimal(8, payload_size);
+      printf("Tamaño %d\n", size);
+
+      char payload[size];
+      char opp_name[256] = "Mario";
+
+      char buffer[LEN_MESSAGE];
+
+      switch (id) {
+        case START_CONNECTION:
+          //printf("recibido\n");
+          make_package(buffer, CONN_ESTABLISHED, 0, NULL);
+          send(conexion_cliente, buffer, LEN_MESSAGE, 0);
+          bzero(buffer, LEN_MESSAGE);
+
+          make_package(buffer, ASK_NICKNAME, 0, NULL);
+          send(conexion_cliente, buffer, LEN_MESSAGE, 0);
+          bzero(buffer, LEN_MESSAGE);
+          break;
+
+        case RET_NICKNAME:
+          memcpy(payload, client_message + 16, size);
+          printf("%s\n", payload);
+
+          make_package(buffer, OPP_FOUND, strlen(opp_name), opp_name);
+          send(conexion_cliente, buffer, LEN_MESSAGE, 0);
+
+          char* pot;
+          pot = decimal_to_binary(1000);
+          printf("%s\n", pot);
+          // make_package(buffer, INITIAL_POT, 2, decimal_to_binary(1000));
+          // send(conexion_cliente, buffer, LEN_MESSAGE, 0);
+
+
+          make_package(buffer, GAME_START, 0, NULL);
+
+          //make_package(buffer, START_ROUND, 0, NULL);
+          //make_package(buffer, INITIAL_BET, 0, NULL);
+          //make_package(buffer, FIVE_CARDS, 0, NULL);
+          //make_package(buffer, FIRST, 1, NULL);
+          //make_package(buffer, GET_CHANGE_CARDS, 0, NULL);
+          break;
+
+        case RET_CHANGE_CARDS:
+          // char bet[5] = {"1", "2", "3", "4", "5"};
+          // make_package(buffer, GET_BET, 5, bet);
+          break;
+
+        case RET_BET:
+          //make_package(buffer, ERROR_BET, 0, NULL);
+          make_package(buffer, OK_BET, 0, NULL);
+          make_package(buffer, END_ROUND, 0, NULL);
+          //make_package(buffer, SHOW_OPP_CARDS, 10, NULL);
+          //make_package(buffer, WINNER_LOSER, 1, NULL);
+          char monto[7];
+          //make_package(buffer, UPDATE_POT, 7, monto);
+          make_package(buffer, GAME_END, 0, NULL);
+          break;
+
+        case ERROR_NOT_IM:
+          break;
+
+      }
 
     }
     if (read_size == 0){
