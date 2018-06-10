@@ -139,8 +139,9 @@ int main(int argc, char **argv){
     return 1;
   }
   struct sockaddr_in cliente; //Declaración de la estructura con información para la conexión
-  struct hostent *servidor; //Declaración de la estructura con información del host
-  servidor = gethostbyname(argv[2]);
+  //struct hostent *servidor; //Declaración de la estructura con información del host
+  char* servidor;
+  servidor = argv[2];
   if(servidor == NULL){
     printf("Host erróneo\n");
     return 1;
@@ -155,7 +156,8 @@ int main(int argc, char **argv){
         //La función bzero() es como memset() pero inicializando a 0 todas la variables
   cliente.sin_family = AF_INET;
   cliente.sin_port = htons(puerto);
-  bcopy((char *)servidor->h_addr, (char *)&cliente.sin_addr.s_addr, sizeof(servidor->h_length));
+  cliente.sin_addr.s_addr = inet_addr(servidor);
+
   //bcopy(); copia los datos del primer elemendo en el segundo con el tamaño máximo
   //del tercer argumento.
 

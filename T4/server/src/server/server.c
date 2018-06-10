@@ -128,20 +128,19 @@ void decod_package(char* package, int conexion_cliente){
 
 int main(int argc, char **argv){
   game = create_game();
-  printf("aqwf\n");
 
   if(argc<5){
     printf("./server -i <ip_address> -p <tcp-port>\n");
     return 1;
   }
-  int conexion_servidor, conexion_cliente, puerto, host, *new_sock; //declaramos las variables
+  int conexion_servidor, conexion_cliente, puerto, *new_sock; //declaramos las variables
+  char* host;
   socklen_t longc; //Debemos declarar una variable que contendrá la longitud de la estructura
   struct sockaddr_in servidor, cliente;
 
   char buffer[LEN_MESSAGE]; //Declaramos una variable que contendrá los mensajes que recibamos
   puerto = atoi(argv[4]);
-  host = atoi(argv[2]);
-
+  host = argv[2];
   conexion_servidor = socket(AF_INET, SOCK_STREAM, 0); //creamos el socket
   bzero((char *)&servidor, sizeof(servidor)); //llenamos la estructura de 0's
   servidor.sin_family = AF_INET; //asignamos a la estructura
@@ -154,7 +153,8 @@ int main(int argc, char **argv){
     return 1;
   }
   listen(conexion_servidor, 2); //Estamos a la escucha
-  printf("A la escucha en el puerto %d, host %d\n", ntohs(servidor.sin_port), inet_addr(servidor.sin_addr.s_addr));
+
+  printf("A la escucha en el puerto %d, host %s\n", ntohs(servidor.sin_port), host);
 
   longc = sizeof(cliente); //Asignamos el tamaño de la estructura a esta variable
 
