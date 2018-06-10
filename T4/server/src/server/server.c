@@ -9,7 +9,6 @@
 #include "utilities.h"
 #include <pthread.h>
 
-#include "server.h"
 
 #include "game.h"
 
@@ -40,7 +39,7 @@
 
 #define LEN_MESSAGE 16000
 Game* game;
-
+void *handler(void *conexion_servidor);
 void make_package(char package[LEN_MESSAGE], int id, int p_size, char *payload){
   char* message_id = decimal_to_binary(id);
   char* payload_size = decimal_to_binary(p_size);
@@ -130,7 +129,7 @@ void decod_package(char* package, int conexion_cliente){
 }
 
 int main(int argc, char **argv){
-  game = create_game();
+  //game = create_game();
   if(argc<5){
     printf("./server -i <ip_address> -p <tcp-port>\n");
     return 1;
