@@ -1,0 +1,9 @@
+## Integrantes:
+* Fernanda García Faura - 13200070
+* Italo Contreras Narbona - 13639218
+
+## Funciones implementadas
+
+* Establece conexión entre dos clientes
+* Envía los mensajes 1, 2, 3, 4, 5, 6, 7, 22.
+* Se maneja los errores enviando el paquete de id 24, Error Not Implemented

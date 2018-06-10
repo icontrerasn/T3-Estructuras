@@ -130,13 +130,17 @@ void decod_package(char* package, int conexion){
       break;
 
     case GAME_END:
+      printf("No hicimos nada más :(\n");
+      close(conexion);
       break;
 
     case IMAGE:
       break;
 
     case ERROR_NOT_IM:
+      printf("Se envió mensaje no identificado\n");
       break;
+
   }
 }
 

@@ -273,6 +273,8 @@ void *handler(void *conexion_servidor){
               //send(conexion_cliente, buffer, LEN_MESSAGE, 0);
               //make_package(buffer, GET_CHANGE_CARDS, 0, NULL);
               //send(conexion_cliente, buffer, LEN_MESSAGE, 0);
+              make_package(buffer, GAME_END, 0, NULL);
+              send(sock, buffer, LEN_MESSAGE, 0);
             }
           }
           break;
@@ -294,15 +296,23 @@ void *handler(void *conexion_servidor){
           break;
 
         case ERROR_NOT_IM:
+          printf("Se envió mensaje no identificado\n");
           break;
+
 
       }
 
     }
+    int count = 0;
     if (read_size == 0){
+      count += 1;
       printf("El cliente se ha desconectado\n");
     } else if (read_size == -1){
       printf("Error al recibir los datos\n");
+    }
+    if (count == 2) {
+      close(conexion_cliente);
+      free(conexion_servidor);
     }
     free(conexion_servidor);
     return 0;
