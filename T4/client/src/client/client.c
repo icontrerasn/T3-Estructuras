@@ -61,6 +61,7 @@ void decod_package(char* package, int conexion){
 
   char buffer[LEN_MESSAGE];
   char nickname[256];
+  int monto;
 
   switch (id) {
     case ASK_NICKNAME:
@@ -76,11 +77,12 @@ void decod_package(char* package, int conexion){
       break;
 
     case INITIAL_POT:
-      printf("Tu monto inicial para apostar es: %s\n", payload);
+      monto = binary_to_decimal(8, payload);
+      printf("Tu monto inicial para apostar es: %d\n", monto);
       break;
 
     case GAME_START:
-      printf("QUE EMPICE EL JUEGO\n");
+      printf("QUE EMPIECE EL JUEGO\n");
       break;
 
     case START_ROUND:
@@ -88,9 +90,16 @@ void decod_package(char* package, int conexion){
       break;
 
     case INITIAL_BET:
+      monto = binary_to_decimal(8, payload);
+      printf("Tienes %d para apostar\n", monto);
       break;
 
     case FIVE_CARDS:
+      printf("Tu mano:\n");
+      for (int i = 0; i < 10; i++) {
+        memcpy(payload, package + 16*(i+1), 8);
+      }
+      //printf("%s\n", );
       break;
 
     case FIRST:
@@ -138,7 +147,7 @@ int main(int argc, char **argv){
     printf("./server -i <ip_address> -p <tcp-port>\n");
     return 1;
   }
-  
+
   struct sockaddr_in cliente; //Declaración de la estructura con información para la conexión
   //struct hostent *servidor; //Declaración de la estructura con información del host
   char* servidor;

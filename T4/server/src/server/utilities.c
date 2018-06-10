@@ -23,6 +23,7 @@ char* decimal_to_binary(int n){
    return pointer;
 }
 
+
 int binary_to_decimal(int n, char* arr){
   int decimalNumber = 0;
   for (int i = 0; i < n; i++){

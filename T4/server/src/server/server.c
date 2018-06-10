@@ -51,7 +51,7 @@ void make_package(char package[LEN_MESSAGE], int id, int p_size, char *payload){
   char* payload_size = decimal_to_binary(p_size);
   memcpy(package, message_id, 8);
   memcpy(package + 8, payload_size, 8);
-  if (p_size != 0) {
+  if (payload != NULL) {
     memcpy(package + 16, payload, p_size);
   }
 }
@@ -242,17 +242,35 @@ void *handler(void *conexion_servidor){
           }
 
 
-          // make_package(buffer, INITIAL_POT, 2, decimal_to_binary(1000));
-          // send(conexion_cliente, buffer, LEN_MESSAGE, 0);
-
+          char* pot;
+          pot = decimal_to_binary(1000);
+          make_package(buffer, INITIAL_POT, 2, NULL);
+          memcpy(buffer + 16, "00000011", 8);
+          memcpy(buffer + 24, "11101000", 8);
+          send(conexion_cliente, buffer, LEN_MESSAGE, 0);
 
           make_package(buffer, GAME_START, 0, NULL);
+          send(conexion_cliente, buffer, LEN_MESSAGE, 0);
 
-          //make_package(buffer, START_ROUND, 0, NULL);
-          //make_package(buffer, INITIAL_BET, 0, NULL);
-          //make_package(buffer, FIVE_CARDS, 0, NULL);
+          make_package(buffer, START_ROUND, 0, NULL);
+          send(conexion_cliente, buffer, LEN_MESSAGE, 0);
+
+          make_package(buffer, INITIAL_BET, 1, NULL);
+          memcpy(buffer + 16, "00001010", 8);
+          send(conexion_cliente, buffer, LEN_MESSAGE, 0);
+
+          Hand* mano = malloc(sizeof(Hand));
+          mano = generate_hand();
+          make_package(buffer, FIVE_CARDS, 10, NULL);
+          for (int c = 0; c < 5; c++) {
+            memcpy(buffer + 16*(c+1), decimal_to_binary(mano->cards[c]->number),8);
+            memcpy(buffer + 24 + 16*c, decimal_to_binary(mano->cards[c]->color),8);
+          }
+          send(conexion_cliente, buffer, LEN_MESSAGE, 0);
           //make_package(buffer, FIRST, 1, NULL);
+          //send(conexion_cliente, buffer, LEN_MESSAGE, 0);
           //make_package(buffer, GET_CHANGE_CARDS, 0, NULL);
+          //send(conexion_cliente, buffer, LEN_MESSAGE, 0);
           break;
 
         case RET_CHANGE_CARDS:
