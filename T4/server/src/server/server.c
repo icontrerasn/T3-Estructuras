@@ -240,37 +240,41 @@ void *handler(void *conexion_servidor){
             sleep(1);
             send(socket_1, buffer, LEN_MESSAGE, 0);
           }
+          if (socket_1 && socket_2) {
+            int sockets[2] = {socket_1, socket_2};
+            for (int i = 0; i < 2; i++) {
+              int sock = sockets[i];
+              char* pot;
+              pot = decimal_to_binary(1000);
+              make_package(buffer, INITIAL_POT, 2, NULL);
+              memcpy(buffer + 16, "00000011", 8);
+              memcpy(buffer + 24, "11101000", 8);
+              send(sock, buffer, LEN_MESSAGE, 0);
 
+              make_package(buffer, GAME_START, 0, NULL);
+              send(sock, buffer, LEN_MESSAGE, 0);
 
-          char* pot;
-          pot = decimal_to_binary(1000);
-          make_package(buffer, INITIAL_POT, 2, NULL);
-          memcpy(buffer + 16, "00000011", 8);
-          memcpy(buffer + 24, "11101000", 8);
-          send(conexion_cliente, buffer, LEN_MESSAGE, 0);
+              make_package(buffer, START_ROUND, 0, NULL);
+              send(sock, buffer, LEN_MESSAGE, 0);
 
-          make_package(buffer, GAME_START, 0, NULL);
-          send(conexion_cliente, buffer, LEN_MESSAGE, 0);
+              make_package(buffer, INITIAL_BET, 1, NULL);
+              memcpy(buffer + 16, "00001010", 8);
+              send(sock, buffer, LEN_MESSAGE, 0);
 
-          make_package(buffer, START_ROUND, 0, NULL);
-          send(conexion_cliente, buffer, LEN_MESSAGE, 0);
-
-          make_package(buffer, INITIAL_BET, 1, NULL);
-          memcpy(buffer + 16, "00001010", 8);
-          send(conexion_cliente, buffer, LEN_MESSAGE, 0);
-
-          Hand* mano = malloc(sizeof(Hand));
-          mano = generate_hand();
-          make_package(buffer, FIVE_CARDS, 10, NULL);
-          for (int c = 0; c < 5; c++) {
-            memcpy(buffer + 16*(c+1), decimal_to_binary(mano->cards[c]->number),8);
-            memcpy(buffer + 24 + 16*c, decimal_to_binary(mano->cards[c]->color),8);
+              // Hand* mano = malloc(sizeof(Hand));
+              // mano = generate_hand();
+              // make_package(buffer, FIVE_CARDS, 10, NULL);
+              // for (int c = 0; c < 5; c++) {
+              //   memcpy(buffer + 16*(c+1), decimal_to_binary(mano->cards[c]->number),8);
+              //   memcpy(buffer + 24 + 16*c, decimal_to_binary(mano->cards[c]->color),8);
+              // }
+              // send(conexion_cliente, buffer, LEN_MESSAGE, 0);
+              //make_package(buffer, FIRST, 1, NULL);
+              //send(conexion_cliente, buffer, LEN_MESSAGE, 0);
+              //make_package(buffer, GET_CHANGE_CARDS, 0, NULL);
+              //send(conexion_cliente, buffer, LEN_MESSAGE, 0);
+            }
           }
-          send(conexion_cliente, buffer, LEN_MESSAGE, 0);
-          //make_package(buffer, FIRST, 1, NULL);
-          //send(conexion_cliente, buffer, LEN_MESSAGE, 0);
-          //make_package(buffer, GET_CHANGE_CARDS, 0, NULL);
-          //send(conexion_cliente, buffer, LEN_MESSAGE, 0);
           break;
 
         case RET_CHANGE_CARDS:
@@ -284,7 +288,7 @@ void *handler(void *conexion_servidor){
           make_package(buffer, END_ROUND, 0, NULL);
           //make_package(buffer, SHOW_OPP_CARDS, 10, NULL);
           //make_package(buffer, WINNER_LOSER, 1, NULL);
-          char monto[7];
+          //char monto[7];
           //make_package(buffer, UPDATE_POT, 7, monto);
           make_package(buffer, GAME_END, 0, NULL);
           break;
