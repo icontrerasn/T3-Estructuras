@@ -9,7 +9,7 @@
 #include "utilities.h"
 #include <pthread.h>
 
-#include <server.h>
+#include "server.h"
 
 #include"game.h"
 
@@ -39,6 +39,7 @@
 #define ERROR_NOT_IM 24
 
 #define LEN_MESSAGE 2000
+
 Game* game;
 
 void make_package(char package[LEN_MESSAGE], int id, int p_size, char *payload){
@@ -104,8 +105,8 @@ void decod_package(char* package, int conexion_cliente){
       break;
 
     case RET_CHANGE_CARDS:
-      char bet[5] = {"1", "2", "3", "4", "5"};
-      make_package(buf, GET_BET, 5, bet);
+      //char bet[5] = {"1", "2", "3", "4", "5"};
+      //make_package(buf, GET_BET, 5, bet);
       break;
 
     case RET_BET:
@@ -127,6 +128,8 @@ void decod_package(char* package, int conexion_cliente){
 
 int main(int argc, char **argv){
   game = create_game();
+  printf("aqwf\n");
+
   if(argc<5){
     printf("./server -i <ip_address> -p <tcp-port>\n");
     return 1;
@@ -143,7 +146,7 @@ int main(int argc, char **argv){
   bzero((char *)&servidor, sizeof(servidor)); //llenamos la estructura de 0's
   servidor.sin_family = AF_INET; //asignamos a la estructura
   servidor.sin_port = htons(puerto);
-  servidor.sin_addr.s_addr = htons(host);//INADDR_ANY; //esta macro especifica nuestra dirección
+  servidor.sin_addr.s_addr = inet_addr(host);//INADDR_ANY; //esta macro especifica nuestra dirección
   if(bind(conexion_servidor, (struct sockaddr *)&servidor, sizeof(servidor)) < 0)
   { //asignamos un puerto al socket
     printf("Error al asociar el puerto a la conexion\n");
@@ -151,7 +154,8 @@ int main(int argc, char **argv){
     return 1;
   }
   listen(conexion_servidor, 2); //Estamos a la escucha
-  printf("A la escucha en el puerto %d, host %d\n", ntohs(servidor.sin_port), ntohs(servidor.sin_addr.s_addr));
+  printf("A la escucha en el puerto %d, host %d\n", ntohs(servidor.sin_port), inet_addr(servidor.sin_addr.s_addr));
+
   longc = sizeof(cliente); //Asignamos el tamaño de la estructura a esta variable
 
   while((conexion_cliente = accept(conexion_servidor, (struct sockaddr *)&cliente, &longc))){
@@ -178,6 +182,7 @@ int main(int argc, char **argv){
 void *handler(void *conexion_servidor){
     int read_size;
     int sock = *(int*)conexion_servidor;
+
     char server_message[16000];
     char client_message[16000];
 

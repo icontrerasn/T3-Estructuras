@@ -45,11 +45,11 @@ Hand* generate_hand(char cards[80]){
 }
 
 Deck* generate_deck(){
-  Deck* deck;
+  Deck* deck = malloc(sizeof(Deck));
   int card_number = 0;
   for (int i = 1; i < 13; i++){
     for (int j = 1; j < 5; j++){
-      Card* card;
+      Card* card = malloc(sizeof(Card));
       card->number = i;
       card->color = j;
       card->available = 1;
@@ -57,6 +57,7 @@ Deck* generate_deck(){
       card_number++;
     }
   }
+  return deck;
 }
 
 void set_deck_available(Deck* deck){
@@ -66,12 +67,13 @@ void set_deck_available(Deck* deck){
 }
 
 Game* create_game(){
-  Game* game;
+  Game* game = malloc(sizeof(Game));
   game->socket[0] = -1;
   game->socket[1] = -1;
   game->player_1_pot = 1000;
   game->player_2_pot = 1000;
   game->deck = generate_deck();
+  return game;
 }
 
 void complete_hand(Hand* hand){
