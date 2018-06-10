@@ -22,24 +22,21 @@ int byte_to_int(char byte[8]){
   return number;
 }
 
-Card* random_card(){
-  int card_number = (rand() % 13) + 1;
-  int card_color = (rand() % 4) + 1;
-  Card* new_card = malloc(sizeof(Card));
-  new_card->number = card_number;
-  new_card->color =  card_color;
-  if (new_card->available){
-    new_card->available = 0;
-    return new_card;
-  } else {
-    return random_card();
+Card* random_card(Deck* deck){
+  while (1){
+    int random = (rand() % 51);
+    Card* random_card = deck->cards[random];
+    if (random_card->available){
+      random_card->available = 0;
+      return random_card;
+    }
   }
 }
 
-Hand* generate_hand(char cards[80]){
+Hand* generate_hand(Deck* deck){
   Hand* new_hand = malloc(sizeof(Hand));
   for (int i = 0; i < 5; i++){
-    new_hand->cards[i] = random_card();
+    new_hand->cards[i] = random_card(deck);
   }
   return new_hand;
 }
@@ -76,10 +73,10 @@ Game* create_game(){
   return game;
 }
 
-void complete_hand(Hand* hand){
+void complete_hand(Hand* hand, Deck* deck){
   for (int i = 0; i < 5; i ++){
     if (!hand->cards[i]){
-      hand->cards[i] = random_card();
+      hand->cards[i] = random_card(deck);
     }
   }
 }
@@ -264,6 +261,7 @@ int determine_winner(Hand* hand_1, Hand* hand_2){
   } else if (points_player_2 > points_player_1){
     return 2;
   } else if (points_player_1 == points_player_2){
-    return 0;;
+    return 0;
   }
+  return -1;
 }

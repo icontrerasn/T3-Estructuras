@@ -34,9 +34,9 @@ char int_to_byte(int number);
 
 int byte_to_int(char byte[8]);
 
-Card* random_card();
+Card* random_card(Deck* deck);
 
-Hand* generate_hand(char cards[80]);
+Hand* generate_hand(Deck* deck);
 
 Deck* generate_deck();
 
@@ -44,7 +44,7 @@ void set_deck_available(Deck* deck);
 
 Game* create_game();
 
-void complete_hand(Hand* hand);
+void complete_hand(Hand* hand, Deck* deck);
 
 int check_royal_flush(Hand* hand);
 

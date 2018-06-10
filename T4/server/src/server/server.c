@@ -41,6 +41,10 @@
 #define LEN_MESSAGE 2000
 
 Game* game;
+char player_1_name[200];
+char player_2_name[200];
+int socket_1;
+int socket_2;
 
 void make_package(char package[LEN_MESSAGE], int id, int p_size, char *payload){
   char* message_id = decimal_to_binary(id);
@@ -187,10 +191,10 @@ void *handler(void *conexion_servidor){
     int conexion_cliente = *(int*)conexion_servidor;
     char client_message[LEN_MESSAGE];
 
-    if (!game->socket[0]){
-      game->socket[0] = conexion_cliente;
+    if (!socket_1){
+      socket_1 = conexion_cliente;
     } else {
-      game->socket[1] = conexion_cliente;
+      socket_2 = conexion_cliente;
     }
 
     while( (read_size = recv(conexion_cliente, client_message, 16000, 0)) > 0){
@@ -205,7 +209,6 @@ void *handler(void *conexion_servidor){
       printf("Tamaño %d\n", size);
 
       char payload[size];
-      char opp_name[256] = "Mario";
 
       char buffer[LEN_MESSAGE];
 
@@ -225,12 +228,20 @@ void *handler(void *conexion_servidor){
           memcpy(payload, client_message + 16, size);
           printf("%s\n", payload);
 
-          make_package(buffer, OPP_FOUND, strlen(opp_name), opp_name);
-          send(conexion_cliente, buffer, LEN_MESSAGE, 0);
+          if (!*player_1_name){
+            memcpy(player_1_name, payload, size);
+          } else {
+            memcpy(player_2_name, payload, size);
+            make_package(buffer, OPP_FOUND, strlen(player_1_name), player_1_name);
+            sleep(1);
+            send(socket_2, buffer, LEN_MESSAGE, 0);
+            char buffer[LEN_MESSAGE];
+            make_package(buffer, OPP_FOUND, strlen(player_2_name), player_2_name);
+            sleep(1);
+            send(socket_1, buffer, LEN_MESSAGE, 0);
+          }
 
-          char* pot;
-          pot = decimal_to_binary(1000);
-          printf("%s\n", pot);
+
           // make_package(buffer, INITIAL_POT, 2, decimal_to_binary(1000));
           // send(conexion_cliente, buffer, LEN_MESSAGE, 0);
 
